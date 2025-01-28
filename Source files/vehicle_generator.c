@@ -1,3 +1,4 @@
+// vehicle_generator.c: Refined vehicle generator for traffic simulation
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -9,9 +10,10 @@
 const char *lane_files[ROADS] = {"lanea.txt", "laneb.txt", "lanec.txt", "laned.txt"};
 
 void generate_vehicles() {
-    srand(time(0));
+    srand(time(0)); // Seed for randomization
 
-    int priority_road = rand() % ROADS;
+    int priority_road = rand() % ROADS;   // Randomly select priority road
+    int priority_lane = (rand() % 2) + 1; // Randomly select priority lane (2 or 3)
 
     for (int road = 0; road < ROADS; road++) {
         FILE *file = fopen(lane_files[road], "w");
@@ -20,26 +22,19 @@ void generate_vehicles() {
             exit(EXIT_FAILURE);
         }
 
-        int lane_1, lane_2, lane_3;
-
-        if (road == priority_road) {
-            // Priority road: one lane exceeds the threshold
-            int priority_lane = rand() % LANES;
-            lane_1 = (priority_lane == 0) ? rand() % 5 + 11 : rand() % 10 + 1; // 11-15 for priority
-            lane_2 = (priority_lane == 1) ? rand() % 5 + 11 : rand() % 10 + 1; // 11-15 for priority
-            lane_3 = (priority_lane == 2) ? rand() % 5 + 11 : rand() % 10 + 1; // 11-15 for priority
-        } else {
-            // Non-priority roads: all lanes under the threshold
-            lane_1 = rand() % 10 + 1; // 1-10 vehicles
-            lane_2 = rand() % 10 + 1; // 1-10 vehicles
-            lane_3 = rand() % 10 + 1; // 1-10 vehicles
+        for (int lane = 0; lane < LANES; lane++) {
+            int vehicles;
+            if (road == priority_road && lane == priority_lane) {
+                vehicles = rand() % 6 + 11; // 11-15 vehicles for the priority lane
+            } else {
+                vehicles = rand() % 10 + 1; // 1-10 vehicles for non-priority lanes
+            }
+            fprintf(file, "%d\n", vehicles);
         }
-
-        fprintf(file, "%d %d %d\n", lane_1, lane_2, lane_3);
         fclose(file);
     }
 
-    printf("Vehicles generated successfully! Priority road is %c.\n", 'A' + priority_road);
+    printf("🚦 Vehicles generated successfully! Priority road is %c, lane %d.\n", 'A' + priority_road, priority_lane + 1);
 }
 
 int main() {

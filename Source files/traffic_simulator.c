@@ -1,14 +1,14 @@
+// traffic_simulator.c: Refined traffic simulator
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <time.h>
 
 #define ROADS 4
 #define LANES 3
 #define PRIORITY_THRESHOLD 10
-#define PRIORITY_DROP 5
 #define MAX_QUEUE_SIZE 100
+#define VEHICLE_PASS_TIME 1 // 1 second per vehicle
 
 const char *lane_files[ROADS] = {"lanea.txt", "laneb.txt", "lanec.txt", "laned.txt"};
 
@@ -20,6 +20,10 @@ typedef struct {
 
 Queue lane_queues[ROADS][LANES];
 
+
+void run_vehicle_generator() {
+    system("./vehicle_generator"); // Call the vehicle generator
+}
 void initialize_queues() {
     for (int road = 0; road < ROADS; road++) {
         for (int lane = 0; lane < LANES; lane++) {
@@ -77,78 +81,65 @@ void load_lane_data() {
     }
 }
 
-void process_lane(int road, int lane, int is_priority) {
-    if (!is_empty(&lane_queues[road][lane])) {
-        dequeue(&lane_queues[road][lane]);
-        if (is_priority) {
-            printf("Processed vehicle from PRIORITY lane %cL%d.\n", 'A' + road, lane + 1);
-        } else {
-            printf("Processed vehicle from road %c, lane %d.\n", 'A' + road, lane + 1);
+void process_lanes(int road, int *total_time, int is_priority) {
+    for (int lane = 1; lane < LANES; lane++) { // Process only Lane 2 and Lane 3
+        while (!is_empty(&lane_queues[road][lane])) {
+            dequeue(&lane_queues[road][lane]);
+            (*total_time)++;
         }
     }
 }
 
 void process_traffic() {
-    static int normal_cycle = 0;
+    int total_time = 0;
     int total_vehicles[ROADS] = {0};
     int priority_road = -1;
 
-    // Calculate total vehicles for each road
+    // Calculate total vehicles and detect priority road
     for (int road = 0; road < ROADS; road++) {
         for (int lane = 0; lane < LANES; lane++) {
             total_vehicles[road] += queue_size(&lane_queues[road][lane]);
         }
-    }
-
-    printf("\nTotal vehicles before processing:\n");
-    for (int road = 0; road < ROADS; road++) {
-        printf("  Road %c: %d vehicles\n", 'A' + road, total_vehicles[road]);
-        if (total_vehicles[road] > PRIORITY_THRESHOLD) {
+        if (total_vehicles[road] > PRIORITY_THRESHOLD && priority_road == -1) {
             priority_road = road;
         }
     }
 
+    printf("\n🚦 Total vehicles before processing:\n");
+    for (int road = 0; road < ROADS; road++) {
+        printf("  Road %c: %d vehicles\n", 'A' + road, total_vehicles[road]);
+    }
+
     if (priority_road != -1) {
-        printf("\nHigh-priority condition! Road %c is prioritized.\n", 'A' + priority_road);
-        for (int lane = 1; lane < LANES; lane++) {
-            while (queue_size(&lane_queues[priority_road][lane]) > PRIORITY_DROP) {
-                process_lane(priority_road, lane, 1);
-            }
-        }
-        int paired_road = (priority_road == 0 || priority_road == 2) ? 0 : 2;
-        if (paired_road == priority_road) paired_road = (priority_road == 1 || priority_road == 3) ? 1 : 3;
-        printf("Processing paired road %c along with priority road %c.\n", 'A' + paired_road, 'A' + priority_road);
-        for (int lane = 1; lane < LANES; lane++) {
-            process_lane(paired_road, lane, 0);
-        }
-        printf("Priority processing completed for road %c.\n", 'A' + priority_road);
+        printf("\n⚠️ Priority lane detected at Road %c! Processing Road %c and its pair.\n", 'A' + priority_road, 'A' + priority_road);
+        int paired_road = (priority_road % 2 == 0) ? 2 : 3; // Pair: A & C, B & D
+        process_lanes(priority_road, &total_time, 1);
+        process_lanes(paired_road, &total_time, 0);
     } else {
-        printf("\nNormal condition: Processing roads in a cycle.\n");
+        static int normal_cycle = 0;
+        printf("\nNo priority lane detected. Running normal condition.\n");
         if (normal_cycle % 2 == 0) {
-            printf("Processing roads A and C.\n");
-            for (int lane = 1; lane < LANES; lane++) {
-                process_lane(0, lane, 0); // Road A
-                process_lane(2, lane, 0); // Road C
-            }
+            printf("Processing Roads A and C.\n");
+            process_lanes(0, &total_time, 0);
+            process_lanes(2, &total_time, 0);
         } else {
-            printf("Processing roads B and D.\n");
-            for (int lane = 1; lane < LANES; lane++) {
-                process_lane(1, lane, 0); // Road B
-                process_lane(3, lane, 0); // Road D
-            }
+            printf("Processing Roads B and D.\n");
+            process_lanes(1, &total_time, 0);
+            process_lanes(3, &total_time, 0);
         }
         normal_cycle++;
     }
 
-    printf("\nTraffic cycle completed.\n");
+    printf("\n⏱️ Combined Countdown: %d seconds required to clear all processed vehicles.\n", total_time * VEHICLE_PASS_TIME);
 }
 
 int main() {
     initialize_queues();
     while (1) {
-        load_lane_data();
-        process_traffic();
-        sleep(5);
+        run_vehicle_generator();    // Generate new vehicle data for each cycle
+        load_lane_data();          // Load updated data into queues
+        process_traffic();         // Process traffic based on updated data
+        sleep(5);                  // Wait before the next cycle
     }
     return 0;
 }
