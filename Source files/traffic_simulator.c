@@ -122,18 +122,18 @@ void process_traffic() {
         }
     }
 
-    printf("\n\U0001F6A6 Total vehicles before processing:\n");
+    printf("\nTotal vehicles before processing:\n");
     for (int road = 0; road < ROADS; road++) {
         printf("  Road %c (Lane 2): %d vehicles\n", 'A' + road, queue_size(&lane_queues[road][1]));
     }
 
     if (priority_road != -1) {
         int clear_time = queue_size(&lane_queues[priority_road][1]) * VEHICLE_PASS_TIME;
-        printf("\n⚠️ Priority road detected at Road %c! Clearing all vehicles (Estimated time: %d sec).\n", 'A' + priority_road, clear_time);
+        printf("\nPriority road detected at Road %c! Clearing all vehicles (Estimated time: %d sec).\n", 'A' + priority_road, clear_time);
         process_road(priority_road, clear_time, 1);
     }
 
-    printf("\n🚦 Total vehicles after processing:\n");
+    printf("\nTotal vehicles after processing:\n");
     for (int road = 0; road < ROADS; road++) {
         printf("  Road %c (Lane 2): %d vehicles\n", 'A' + road, queue_size(&lane_queues[road][1]));
     }
