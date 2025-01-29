@@ -70,12 +70,15 @@ To Run the Vehicle Generator (Optional but Recommended)
 ```bash
 gcc vehicle_generator.c -o generator
 ./generator
-```bash
+```
 ### **Process to Run the Program**
 1.Run simulator.exe (Windows) or ./simulator (Linux/Mac) to start the traffic simulation.
+
 2.Optionally, run generator.exe (Windows) or ./generator (Linux/Mac) to dynamically update vehicle data.
+
 3.Observe real-time traffic updates and priority-based vehicle clearance.
-3.Press CTRL + C to stop execution.
+
+4.Press CTRL + C to stop execution.
 
 ### **Demo (GIF/Video)**
 
@@ -84,9 +87,12 @@ For a full demonstration, check out this video.
 
 ### **References**
 Queue-based traffic management: GeeksforGeeks
+
 Traffic simulation concepts: Research Paper on Traffic Flow
+
 C Programming for File Handling: Tutorial
-Contributions
+
+### **Contributions**
 Contributions are welcome! Fork the repository, make changes, and submit a pull request.
 
 Happy coding! 🚦🚗
