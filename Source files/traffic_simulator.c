@@ -9,7 +9,7 @@
 #define PRIORITY_THRESHOLD 10
 #define MAX_QUEUE_SIZE 100
 #define VEHICLE_PASS_TIME 1 // 1 second per vehicle
-#define MAX_VEHICLES 10 // Maximum vehicles per lane except priority lane
+#define MAX_VEHICLES 5 // Maximum vehicles per lane except priority lane
 
 const char *lane_files[ROADS] = {"lanea.txt", "laneb.txt", "lanec.txt", "laned.txt"};
 
@@ -103,9 +103,9 @@ void process_road(int road) {
 }
 
 void process_traffic() {
-    static int normal_cycle = 0;
     int priority_road = -1;
     int max_priority_count = 0;
+    
     for (int road = 0; road < ROADS; road++) {
         int lane_count = queue_size(&lane_queues[road][1]);
         if (lane_count > PRIORITY_THRESHOLD && lane_count > max_priority_count) {
@@ -123,18 +123,12 @@ void process_traffic() {
         int clear_time = queue_size(&lane_queues[priority_road][1]) * VEHICLE_PASS_TIME;
         printf("\n⚠️ Priority road detected at Road %c! Clearing all vehicles (Estimated time: %d sec).\n", 'A' + priority_road, clear_time);
         process_road(priority_road);
-    } else {
-        printf("\nRunning normal condition.\n");
-        if (normal_cycle % 2 == 0) {
-            printf("Processing Roads A and C.\n");
-            process_road(0);
-            process_road(2);
-        } else {
-            printf("Processing Roads B and D.\n");
-            process_road(1);
-            process_road(3);
-        }
-        normal_cycle++;
+    }
+
+    printf("\nRunning normal condition. Serving all roads sequentially.\n");
+    for (int road = 0; road < ROADS; road++) {
+        printf("Processing Road %c.\n", 'A' + road);
+        process_road(road);
     }
 }
 
