@@ -1,14 +1,17 @@
-// traffic_simulator.c: Refined traffic simulator
+// traffic_simulator.c: Refined traffic simulator without <sys/wait.h> or <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <time.h>
+#include <windows.h> // For Sleep() on Windows
 
 #define ROADS 4
 #define LANES 3
 #define PRIORITY_THRESHOLD 10
+#define PRIORITY_RESET 5
 #define MAX_QUEUE_SIZE 100
 #define VEHICLE_PASS_TIME 1 // 1 second per vehicle
+#define MAX_VEHICLES 20 // Maximum vehicles per lane
 
 const char *lane_files[ROADS] = {"lanea.txt", "laneb.txt", "lanec.txt", "laned.txt"};
 
@@ -20,10 +23,6 @@ typedef struct {
 
 Queue lane_queues[ROADS][LANES];
 
-
-void run_vehicle_generator() {
-    system("./vehicle_generator"); // Call the vehicle generator
-}
 void initialize_queues() {
     for (int road = 0; road < ROADS; road++) {
         for (int lane = 0; lane < LANES; lane++) {
@@ -61,6 +60,25 @@ int queue_size(Queue *q) {
     return (q->rear >= q->front) ? q->rear - q->front + 1 : MAX_QUEUE_SIZE - q->front + q->rear + 1;
 }
 
+// Generate random traffic and write to files
+void generate_traffic() {
+    srand(time(NULL)); // Seed random number generator
+    for (int road = 0; road < ROADS; road++) {
+        FILE *file = fopen(lane_files[road], "w");
+        if (!file) {
+            perror("Error opening file");
+            exit(EXIT_FAILURE);
+        }
+        for (int lane = 0; lane < LANES; lane++) {
+            int vehicles = rand() % (MAX_VEHICLES + 1); // Generate 0 to MAX_VEHICLES vehicles
+            fprintf(file, "%d\n", vehicles);
+        }
+        fclose(file);
+    }
+    printf("🚗 Traffic data updated!\n");
+}
+
+// Load data from files into queues
 void load_lane_data() {
     for (int road = 0; road < ROADS; road++) {
         FILE *file = fopen(lane_files[road], "r");
@@ -81,8 +99,9 @@ void load_lane_data() {
     }
 }
 
-void process_lanes(int road, int *total_time, int is_priority) {
-    for (int lane = 1; lane < LANES; lane++) { // Process only Lane 2 and Lane 3
+// Process vehicles for a specific road
+void process_road(int road, int *total_time) {
+    for (int lane = 0; lane < LANES; lane++) {
         while (!is_empty(&lane_queues[road][lane])) {
             dequeue(&lane_queues[road][lane]);
             (*total_time)++;
@@ -90,7 +109,9 @@ void process_lanes(int road, int *total_time, int is_priority) {
     }
 }
 
+// Traffic management logic
 void process_traffic() {
+    static int normal_cycle = 0; // To alternate between A&C and B&D
     int total_time = 0;
     int total_vehicles[ROADS] = {0};
     int priority_road = -1;
@@ -100,7 +121,7 @@ void process_traffic() {
         for (int lane = 0; lane < LANES; lane++) {
             total_vehicles[road] += queue_size(&lane_queues[road][lane]);
         }
-        if (total_vehicles[road] > PRIORITY_THRESHOLD && priority_road == -1) {
+        if (total_vehicles[road] > PRIORITY_THRESHOLD && (priority_road == -1 || total_vehicles[road] > total_vehicles[priority_road])) {
             priority_road = road;
         }
     }
@@ -111,21 +132,20 @@ void process_traffic() {
     }
 
     if (priority_road != -1) {
-        printf("\n⚠️ Priority lane detected at Road %c! Processing Road %c and its pair.\n", 'A' + priority_road, 'A' + priority_road);
-        int paired_road = (priority_road % 2 == 0) ? 2 : 3; // Pair: A & C, B & D
-        process_lanes(priority_road, &total_time, 1);
-        process_lanes(paired_road, &total_time, 0);
+        // Serve only the priority road
+        printf("\n⚠️ Priority road detected at Road %c! Processing exclusively.\n", 'A' + priority_road);
+        process_road(priority_road, &total_time);
     } else {
-        static int normal_cycle = 0;
-        printf("\nNo priority lane detected. Running normal condition.\n");
+        // Normal condition: Alternate between A&C or B&D
+        printf("\nNo priority road detected. Running normal condition.\n");
         if (normal_cycle % 2 == 0) {
             printf("Processing Roads A and C.\n");
-            process_lanes(0, &total_time, 0);
-            process_lanes(2, &total_time, 0);
+            process_road(0, &total_time); // Road A
+            process_road(2, &total_time); // Road C
         } else {
             printf("Processing Roads B and D.\n");
-            process_lanes(1, &total_time, 0);
-            process_lanes(3, &total_time, 0);
+            process_road(1, &total_time); // Road B
+            process_road(3, &total_time); // Road D
         }
         normal_cycle++;
     }
@@ -136,10 +156,10 @@ void process_traffic() {
 int main() {
     initialize_queues();
     while (1) {
-        run_vehicle_generator();    // Generate new vehicle data for each cycle
-        load_lane_data();          // Load updated data into queues
-        process_traffic();         // Process traffic based on updated data
-        sleep(5);                  // Wait before the next cycle
+        generate_traffic();    // Generate new vehicle data
+        load_lane_data();      // Load updated data into queues
+        process_traffic();     // Process traffic based on updated data
+        Sleep(5000);           // Wait 5 seconds before the next cycle
     }
     return 0;
 }
