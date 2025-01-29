@@ -96,9 +96,17 @@ void load_lane_data() {
     }
 }
 
-void process_road(int road) {
-    while (!is_empty(&lane_queues[road][1])) {
-        dequeue(&lane_queues[road][1]);
+void process_road(int road, int time_limit, int clear_queue) {
+    for (int i = time_limit; i > 0; i--) {
+        printf("\rProcessing Road %c. Countdown: %ds", 'A' + road, i);
+        fflush(stdout);
+        Sleep(1000);
+    }
+    printf("\rProcessing Road %c complete.\n", 'A' + road);
+    if (clear_queue) {
+        while (!is_empty(&lane_queues[road][1])) {
+            dequeue(&lane_queues[road][1]);
+        }
     }
 }
 
@@ -122,13 +130,17 @@ void process_traffic() {
     if (priority_road != -1) {
         int clear_time = queue_size(&lane_queues[priority_road][1]) * VEHICLE_PASS_TIME;
         printf("\n⚠️ Priority road detected at Road %c! Clearing all vehicles (Estimated time: %d sec).\n", 'A' + priority_road, clear_time);
-        process_road(priority_road);
+        process_road(priority_road, clear_time, 1);
+    }
+
+    printf("\n🚦 Total vehicles after processing:\n");
+    for (int road = 0; road < ROADS; road++) {
+        printf("  Road %c (Lane 2): %d vehicles\n", 'A' + road, queue_size(&lane_queues[road][1]));
     }
 
     printf("\nRunning normal condition. Serving all roads sequentially.\n");
     for (int road = 0; road < ROADS; road++) {
-        printf("Processing Road %c.\n", 'A' + road);
-        process_road(road);
+        process_road(road, 3, 0);
     }
 }
 
