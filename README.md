@@ -7,7 +7,6 @@ A real-time traffic simulation system for managing and optimizing road traffic f
 Traffic Simulator is a C-based application that simulates a real-world traffic system by generating vehicles on different roads and lanes. It processes and clears traffic using an intelligent queue-based approach to prioritize high-traffic areas.
 
 This project aims to model dynamic traffic behavior and optimize vehicle movement by implementing priority-based traffic management.
-
 ## **Key Features**
 
 - 🚗 **Real-Time Traffic Generation**: Simulates vehicle arrivals dynamically.
