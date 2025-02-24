@@ -95,14 +95,3 @@ C Programming for File Handling: Tutorial
 Contributions are welcome! Fork the repository, make changes, and submit a pull request.
 
 Happy coding! 🚦🚗
-
-
-
-
-
-
-
-
-
-
-
