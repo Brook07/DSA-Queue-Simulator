@@ -3,6 +3,7 @@
 #include <math.h>
 #include "traffic_simulation.h"
 
+
 // Global queues for lanes
 Queue laneQueues[4];         // Queues for lanes A, B, C, D
 int lanePriorities[4] = {0}; // Priority levels for lanes (0 = normal, 1 = high)
@@ -38,42 +39,51 @@ void initializeTrafficLights(TrafficLight *lights)
         .direction = DIRECTION_WEST};
 }
 
-void updateTrafficLights(TrafficLight *lights)
-{
+void updateTrafficLights(TrafficLight *lights) {
     Uint32 currentTicks = SDL_GetTicks();
     static Uint32 lastUpdateTicks = 0;
 
-    if (currentTicks - lastUpdateTicks >= 5000)
-    { // Change lights every 5 seconds
+    if (currentTicks - lastUpdateTicks >= 20000) { // Change every 5 seconds
         lastUpdateTicks = currentTicks;
 
-        // Check for high-priority lanes
-        for (int i = 0; i < 4; i++)
-        {
-            if (laneQueues[i].size > 10)
-            {
+        int maxPriorityLane = -1;  // Track highest priority lane
+
+        // Update priority status of lanes
+        for (int i = 0; i < 4; i++) {
+            if (laneQueues[i].size > 10) {
                 lanePriorities[i] = 1; // Set high priority
-            }
-            else if (laneQueues[i].size < 5)
-            {
-                lanePriorities[i] = 0; // Reset to normal priority
+                if (maxPriorityLane == -1 || laneQueues[i].size > laneQueues[maxPriorityLane].size) {
+                    maxPriorityLane = i; // Find the lane with the most vehicles
+                }
+            } else if (laneQueues[i].size < 5) {
+                lanePriorities[i] = 0; // Reset priority
             }
         }
 
-        // Toggle lights based on priority
-        for (int i = 0; i < 4; i++)
-        {
-            if (lanePriorities[i] == 1)
-            {
-                lights[i].state = GREEN; // Give green light to high-priority lane
+        // Assign green light only to the highest priority lane
+        for (int i = 0; i < 4; i++) {
+            lights[i].state = (i == maxPriorityLane) ? GREEN : RED;
+        }
+
+        // If no priority lane, alternate between A&C or B&D
+        static int normalCycle = 0;
+        if (maxPriorityLane == -1) {
+            if (normalCycle % 2 == 0) {
+                lights[DIRECTION_NORTH].state = GREEN;
+                lights[DIRECTION_SOUTH].state = GREEN;
+                lights[DIRECTION_EAST].state = RED;
+                lights[DIRECTION_WEST].state = RED;
+            } else {
+                lights[DIRECTION_EAST].state = GREEN;
+                lights[DIRECTION_WEST].state = GREEN;
+                lights[DIRECTION_NORTH].state = RED;
+                lights[DIRECTION_SOUTH].state = RED;
             }
-            else
-            {
-                lights[i].state = (lights[i].state == RED) ? GREEN : RED; // Toggle lights
-            }
+            normalCycle++;
         }
     }
 }
+
 
 Vehicle *createVehicle(Direction direction)
 {
@@ -201,8 +211,82 @@ Vehicle *createVehicle(Direction direction)
     return vehicle;
 }
 
+#define MIN_GAP 50  // Minimum gap between vehicles
+
+bool isSafeToMove(Vehicle *vehicle, Vehicle vehicles[], int count) {
+    for (int i = 0; i < count; i++) {
+        if (!vehicles[i].active || &vehicles[i] == vehicle) continue;
+
+        // Check if both vehicles are in the same lane & moving in the same direction
+        if (vehicles[i].direction == vehicle->direction) {
+            float distance = 0;
+
+            switch (vehicle->direction) {
+                case DIRECTION_NORTH:
+                    distance = vehicle->y - vehicles[i].y;
+                    break;
+                case DIRECTION_SOUTH:
+                    distance = vehicles[i].y - vehicle->y;
+                    break;
+                case DIRECTION_EAST:
+                    distance = vehicles[i].x - vehicle->x;
+                    break;
+                case DIRECTION_WEST:
+                    distance = vehicle->x - vehicles[i].x;
+                    break;
+            }
+
+            // If another vehicle is too close ahead, stop this vehicle
+            if (distance > 0 && distance < MIN_GAP) {
+                return false; // Not safe to move
+            }
+        }
+    }
+    return true; // Safe to move
+}
+#define STOP_GAP 40  // Minimum gap between stopped vehicles
+
+bool isSafeToStop(Vehicle *vehicle, Vehicle vehicles[], int count) {
+    for (int i = 0; i < count; i++) {
+        if (!vehicles[i].active || &vehicles[i] == vehicle) continue;
+
+        // Check if both vehicles are in the same lane & direction
+        if (vehicles[i].direction == vehicle->direction) {
+            float distance = 0;
+            bool sameLane = false;
+
+            switch (vehicle->direction) {
+                case DIRECTION_NORTH:
+                    distance = vehicle->y - vehicles[i].y;
+                    sameLane = (fabs(vehicle->x - vehicles[i].x) < vehicle->rect.w);
+                    break;
+                case DIRECTION_SOUTH:
+                    distance = vehicles[i].y - vehicle->y;
+                    sameLane = (fabs(vehicle->x - vehicles[i].x) < vehicle->rect.w);
+                    break;
+                case DIRECTION_EAST:
+                    distance = vehicles[i].x - vehicle->x;
+                    sameLane = (fabs(vehicle->y - vehicles[i].y) < vehicle->rect.h);
+                    break;
+                case DIRECTION_WEST:
+                    distance = vehicle->x - vehicles[i].x;
+                    sameLane = (fabs(vehicle->y - vehicles[i].y) < vehicle->rect.h);
+                    break;
+            }
+
+            // If another vehicle is already stopped too close ahead, return false
+            if (sameLane && distance > 0 && distance < STOP_GAP) {
+                return false;
+            }
+        }
+    }
+    return true; // Safe to stop
+}
+
+
 void updateVehicle(Vehicle *vehicle, TrafficLight *lights)
 {
+    
     if (!vehicle->active)
         return;
 
@@ -621,24 +705,28 @@ void enqueue(Queue *q, Vehicle vehicle)
     q->size++;
 }
 
-Vehicle dequeue(Queue *q)
-{
-    if (q->front == NULL)
-    {
+Vehicle dequeue(Queue *q) {
+    if (q->front == NULL) {
         Vehicle emptyVehicle = {0};
         return emptyVehicle;
     }
+    
     Node *temp = q->front;
     Vehicle vehicle = temp->vehicle;
+    
     q->front = q->front->next;
-    if (q->front == NULL)
-    {
+    if (q->front == NULL) {
         q->rear = NULL;
     }
+    
     free(temp);
     q->size--;
+
+    // Mark vehicle as inactive after it exits
+    vehicle.active = false;
     return vehicle;
 }
+
 
 int isQueueEmpty(Queue *q)
 {
