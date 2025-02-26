@@ -22,7 +22,7 @@ The system manages normal and high-priority vehicle dispatch using queue data st
 ### Traffic Management Rules
 
 1. **Normal Condition**: Traffic lights change based on the number of vehicles in each lane, ensuring fair service
-2. **Priority Condition**: When lane AL2 exceeds 10 vehicles, it receives exclusive service until the count drops below 5
+2. **Priority Condition**: When lane (Eg:AL2) exceeds 10 vehicles, it receives exclusive service until the count drops below 5
 3. **Continuous Processing**: The system continuously monitors lane conditions and adjusts traffic flow
 
 ### Core Components
@@ -43,7 +43,7 @@ The traffic processing algorithm follows these steps:
 
 1. Read vehicle data from files
 2. Enqueue vehicles into respective lane queues
-3. Check priority conditions (AL2 > 10 vehicles)
+3. Check priority conditions (Eg :AL2 > 10 vehicles)
 4. Process vehicles according to current conditions
 5. Update traffic lights accordingly
 6. Render the visualization
