@@ -1,117 +1,97 @@
-# 🚦 DSA Queue Simulator
+# **Traffic Simulator 🚦**
 
-## Four-Way Junction Traffic Management System
+A real-time traffic simulation system for managing and optimizing road traffic flow.
 
-This project implements a queue-based traffic management simulation for a four-way junction, developed as part of the Data Structure and Algorithms (COMP202) course.
+## **Overview**
 
-![Traffic Simulation](https://github.com/YOUR_USERNAME/dsa-queue-simulator/blob/main/demo.gif)
+Traffic Simulator is a C-based application that simulates a real-world traffic system by generating vehicles on different roads and lanes. It processes and clears traffic using an intelligent queue-based approach to prioritize high-traffic areas.
 
-## 📋 Project Overview
+This project aims to model dynamic traffic behavior and optimize vehicle movement by implementing priority-based traffic management.
+## **Key Features**
 
-The system manages normal and high-priority vehicle dispatch using queue data structures. The traffic flow is controlled by dynamically adjusting traffic lights based on queue sizes and priority conditions.
+- 🚗 **Real-Time Traffic Generation**: Simulates vehicle arrivals dynamically.
+- 📊 **Queue-Based Traffic Processing**: Implements queue structures for managing lanes.
+- ⚠️ **Priority-Based Traffic Flow**: Roads with high congestion get priority clearance.
+- 🕒 **Automated Traffic Updates**: Continuously updates traffic data every 5 seconds.
+- 🔄 **Crossroad Traffic Handling**: Simulates multiple intersecting roads.
 
-### Key Features
+## **How It Works**
 
-- 🚗 **Queue-based Traffic Management**: Vehicles are queued in each lane and processed according to traffic rules
-- 🚨 **Priority Lane Handling**: Special handling for high-priority lanes when congestion occurs
-- 🖥️ **Real-time Visualization**: Graphical representation using SDL2 library
-- 📁 **File-based Communication**: Vehicle generation and processing via text files
+### **Vehicle Generation**
 
-## 🏗️ System Architecture
+- Vehicles are generated randomly for different lanes on 4 roads.
+- Data is stored in text files (`lanea.txt`, `laneb.txt`, etc.).
 
-### Traffic Management Rules
+### **Traffic Processing**
 
-1. **Normal Condition**: Traffic lights change based on the number of vehicles in each lane, ensuring fair service
-2. **Priority Condition**: When lane (Eg:AL2) exceeds 10 vehicles, it receives exclusive service until the count drops below 5
-3. **Continuous Processing**: The system continuously monitors lane conditions and adjusts traffic flow
+- Reads vehicle data from files and stores it in queue structures.
+- Roads with excessive traffic (above a set threshold) are given priority clearance.
+- Normal cycle alternates between different roads if no priority case exists.
 
-### Core Components
+### **Continuous Simulation**
 
-- **Generator**: Creates vehicle data and writes to text files
-- **Simulator**: Reads vehicle data, manages queues, controls traffic lights, and provides visualization
+- Runs in an infinite loop with periodic updates.
+- Clears vehicles from lanes based on defined rules.
 
-## 📊 Data Structures
+## **Requirements**
 
-| Structure | Implementation | Purpose |
-|-----------|----------------|---------|
-| Queue | Array-based | Storing vehicles in each lane |
-| Priority Queue | Modified queue with dynamic priority | Managing high-priority lanes |
+- 🖥️ **OS**: Windows/Linux (Windows uses `Sleep()`, Linux uses `sleep()`).
+- 💾 **Memory**: 2GB RAM (Minimum), 4GB+ (Recommended).
+- 📜 **Compiler**: GCC (MinGW for Windows, GCC for Linux/Mac).
 
-## ⚙️ Algorithm Design
+## **Installation & Usage**
 
-The traffic processing algorithm follows these steps:
-
-1. Read vehicle data from files
-2. Enqueue vehicles into respective lane queues
-3. Check priority conditions (Eg :AL2 > 10 vehicles)
-4. Process vehicles according to current conditions
-5. Update traffic lights accordingly
-6. Render the visualization
-7. Repeat until simulation ends
-
-### Time Complexity Analysis
-
-- Queue Operations (enqueue, dequeue): O(1)
-- Traffic Light Update: O(n) where n = number of lanes
-- Vehicle Processing: O(n)
-- Overall Time Complexity: O(n)
-
-## 💻 Implementation Details
-
-### Key Functions
-
-```c
-// Queue operations
-void enqueue(Queue* q, Vehicle v);
-Vehicle dequeue(Queue* q);
-bool isEmpty(Queue* q);
-
-// Traffic management
-void updateTrafficLights(TrafficLight* lights);
-void processTraffic(Lane* lanes);
-
-// Visualization
-void renderSimulation(SDL_Renderer* renderer, Lane* lanes);
-void renderRoads(SDL_Renderer* renderer);
-void renderVehicles(SDL_Renderer* renderer, Lane* lanes);
-
-// File I/O
-void readLaneData(Lane* lanes);
-void writeVehicleData(Lane* lanes);
-```
-
-## 🚀 Installation and Setup
-
-### Prerequisites
-
-- C compiler (GCC or MinGW)
-- SDL2 library
-- Git (optional, for cloning the repository)
-
-### Installation Steps
+### **Clone the Repository**
 
 ```bash
-# Install SDL2 on Ubuntu/Debian
-sudo apt-get install libsdl2-dev
-
-# Install SDL2 on macOS using Homebrew
-brew install sdl2
-
-# Install SDL2 on Windows
-# Download from https://www.libsdl.org/download-2.0.php
+git clone https://github.com/yourusername/traffic-simulator.git
 ```
+This will download the project files into a folder.
 
-### Building the Project
+### **Navigate to the Project Folder**
 
+Navigate to the Project Folder
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/dsa-queue-simulator.git
-cd dsa-queue-simulator
+cd traffic-simulator
+```
+### **Compile and Run**
+For Windows:
+```bash
+gcc traffic_simulator.c -o simulator.exe
+simulator.exe
+```
+For Linux/Mac:
+```bash
+gcc traffic_simulator.c -o simulator
+./simulator
+```
+To Run the Vehicle Generator (Optional but Recommended)
+```bash
+gcc vehicle_generator.c -o generator
+./generator
+```
+### **Process to Run the Program**
+1.Run simulator.exe (Windows) or ./simulator (Linux/Mac) to start the traffic simulation.
 
-# Compile the generator
-	g++ -o bin/generator src/generator.c src/traffic_simulation.c -lSDL2 -Iinclude -Llib -lmingw32 -lSDL2main -lSDL2
-# Compile the simulator
-g++ -Iinclude -Llib -o bin/main.exe src/main.c src/traffic_simulation.c -lmingw32 -lSDL2main -lSDL2
+2.Optionally, run generator.exe (Windows) or ./generator (Linux/Mac) to dynamically update vehicle data.
 
-#Run the main code
-./bin/main.exe
+3.Observe real-time traffic updates and priority-based vehicle clearance.
+
+4.Press CTRL + C to stop execution.
+
+### **Demo (GIF/Video)**
+
+
+For a full demonstration, check out this video.
+
+### **References**
+Queue-based traffic management: GeeksforGeeks
+
+Traffic simulation concepts: Research Paper on Traffic Flow
+
+C Programming for File Handling: Tutorial
+
+### **Contributions**
+Contributions are welcome! Fork the repository, make changes, and submit a pull request.
+
+Happy coding! 🚦🚗
