@@ -4,7 +4,7 @@
 
 This project implements a queue-based traffic management simulation for a four-way junction, developed as part of the Data Structure and Algorithms (COMP202) course.
 
-![Traffic Simulation](https://github.com/YOUR_USERNAME/dsa-queue-simulator/blob/main/demo.gif)
+![Traffic Simulation](https://github.com/Brook07/DSA-Queue-Simulator/blob/main/Simulation-Demo.gif)
 
 ## 📋 Project Overview
 
