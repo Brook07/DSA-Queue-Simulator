@@ -33,9 +33,7 @@ typedef enum {
 
 typedef enum {
     REGULAR_CAR,
-    AMBULANCE,
-    POLICE_CAR,
-    FIRE_TRUCK
+
 } VehicleType;
 
 typedef enum {
@@ -95,7 +93,7 @@ extern Queue laneQueues[4];
 void initializeTrafficLights(TrafficLight* lights);
 void updateTrafficLights(TrafficLight* lights);
 Vehicle* createVehicle(Direction direction);
-void updateVehicle(Vehicle* vehicle, TrafficLight* lights);
+void updateVehicle(Vehicle *vehicle, TrafficLight *lights);
 void renderSimulation(SDL_Renderer* renderer, Vehicle* vehicles, TrafficLight* lights, Statistics* stats);
 void renderRoads(SDL_Renderer* renderer);
 void renderQueues(SDL_Renderer* renderer);
@@ -105,5 +103,4 @@ void initQueue(Queue* q);
 void enqueue(Queue* q, Vehicle vehicle);
 Vehicle dequeue(Queue* q);
 int isQueueEmpty(Queue* q);
-
 #endif
